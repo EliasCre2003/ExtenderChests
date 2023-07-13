@@ -1,0 +1,4 @@
+name: ExtenderChests
+version: '${version}'
+main: org.eliascregard.extenderchests.ExtenderChests
+api-version: '1.20'
