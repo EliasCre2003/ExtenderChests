@@ -1,21 +1,21 @@
 package org.eliascregard.extenderchests;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.eliascregard.extenderchests.handlers.EchoShardHandler;
-import org.eliascregard.extenderchests.handlers.PlayerChestHandler;
+import org.eliascregard.extenderchests.listeners.EchoShardListener;
+import org.eliascregard.extenderchests.listeners.PlayerChestListener;
 
 public final class ExtenderChests extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        new EchoShardHandler(this);
-        new PlayerChestHandler(this);
+        PlayerInventoryHandler.load();
+        new EchoShardListener(this);
+        new PlayerChestListener(this);
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        PlayerInventoryHandler.save();
     }
 
-//    private void
 }
