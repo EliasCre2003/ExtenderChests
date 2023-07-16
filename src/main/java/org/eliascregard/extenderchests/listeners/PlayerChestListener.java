@@ -1,14 +1,11 @@
 package org.eliascregard.extenderchests.listeners;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
 import org.bukkit.block.EnderChest;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Directional;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,31 +15,20 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 import org.eliascregard.extenderchests.ExtenderChests;
-import org.eliascregard.extenderchests.PlayerInventoryHandler;
+import org.eliascregard.extenderchests.inventory.PlayerInventoryHandler;
 
 import java.util.*;
 
 public class PlayerChestListener implements Listener {
 
-    private final Map<UUID, Integer> chestRowCounts = new HashMap<>();
     private final Map<Block, Set<UUID>> currentOpenChestSessions = new HashMap<>();
 
     public PlayerChestListener(ExtenderChests plugin) {
         Bukkit.getPluginManager().registerEvents(this, plugin);
-    }
-    public int getChestRowCount(UUID playerUUID) {
-        return chestRowCounts.get(playerUUID);
-    }
-    public void increaseChestRowCount(UUID playerUUID, int amount) {
-        chestRowCounts.put(playerUUID, chestRowCounts.get(playerUUID) + amount);
-    }
-    public void increaseChestRowCount(UUID playerUUID) {
-        increaseChestRowCount(playerUUID, 1);
     }
 
     @EventHandler
@@ -69,18 +55,8 @@ public class PlayerChestListener implements Listener {
         event.setCancelled(true);
         HumanEntity player = event.getPlayer();
         UUID playerUUID = player.getUniqueId();
-        Inventory inv;
-        if (!PlayerInventoryHandler.containsPlayerInventory(playerUUID)) {
-            inv = Bukkit.createInventory(PlayerInventoryHandler.NEW_ENDER_CHEST, 27, "New Ender Chest");
-        } else {
-            inv = PlayerInventoryHandler.getPlayerInventory(playerUUID);
-        }
-        player.openInventory(inv);
-        ItemStack[] contents = inv.getContents();
-        for (ItemStack stack : contents) {
-            if (stack == null) continue;
-            Bukkit.getLogger().info(stack.toString());
-        }
+        Inventory inventory = PlayerInventoryHandler.getPlayerInventory(playerUUID);;
+        player.openInventory(inventory);
     }
 
     @EventHandler
@@ -92,14 +68,23 @@ public class PlayerChestListener implements Listener {
             Set<UUID> sessions = currentOpenChestSessions.get(chestBlock);
             sessions.remove(playerUUID);
             if (sessions.isEmpty()) {
-                ((EnderChest) chestBlock.getState()).close();
                 BlockData blockData = chestBlock.getBlockData().clone();
                 chestBlock.setType(Material.CHEST);
                 chestBlock.setType(Material.ENDER_CHEST);
                 chestBlock.setBlockData(blockData);
+//                chestBlock.getWorld().playSound(chestBlock.getLocation(), Sound.BLOCK_ENDER_CHEST_CLOSE, 1, 1);
                 currentOpenChestSessions.remove(chestBlock);
                 Bukkit.getLogger().info("Closed ender chest");
             }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Bukkit.getLogger().info("Player joined ");
+        UUID playerUUID = event.getPlayer().getUniqueId();
+        if (!PlayerInventoryHandler.containsPlayerInventory(playerUUID)) {
+            PlayerInventoryHandler.addNewPlayerInventory(playerUUID);
         }
     }
 }
