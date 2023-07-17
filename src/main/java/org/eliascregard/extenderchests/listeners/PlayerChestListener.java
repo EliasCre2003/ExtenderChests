@@ -7,7 +7,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.EnderChest;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -17,7 +16,6 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 import org.eliascregard.extenderchests.ExtenderChests;
 import org.eliascregard.extenderchests.inventory.PlayerInventoryHandler;
 
@@ -43,10 +41,8 @@ public class PlayerChestListener implements Listener {
         } else {
             sessions = currentOpenChestSessions.get(enderChest);
         }
-        Bukkit.getLogger().info("Session started");
         sessions.add(playerUUID);
         currentOpenChestSessions.put(enderChest, sessions);
-
     }
 
     @EventHandler
@@ -67,21 +63,18 @@ public class PlayerChestListener implements Listener {
         for (Block chestBlock : currentOpenChestSessions.keySet()) {
             Set<UUID> sessions = currentOpenChestSessions.get(chestBlock);
             sessions.remove(playerUUID);
-            if (sessions.isEmpty()) {
-                BlockData blockData = chestBlock.getBlockData().clone();
-                chestBlock.setType(Material.CHEST);
-                chestBlock.setType(Material.ENDER_CHEST);
-                chestBlock.setBlockData(blockData);
-//                chestBlock.getWorld().playSound(chestBlock.getLocation(), Sound.BLOCK_ENDER_CHEST_CLOSE, 1, 1);
-                currentOpenChestSessions.remove(chestBlock);
-                Bukkit.getLogger().info("Closed ender chest");
-            }
+            if (!sessions.isEmpty()) return;
+            BlockData blockData = chestBlock.getBlockData().clone();
+            chestBlock.setType(Material.CHEST);
+            chestBlock.setType(Material.ENDER_CHEST);
+            chestBlock.setBlockData(blockData);
+            chestBlock.getWorld().playSound(chestBlock.getLocation(), Sound.BLOCK_ENDER_CHEST_CLOSE, 1, 0);
+            currentOpenChestSessions.remove(chestBlock);
         }
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Bukkit.getLogger().info("Player joined ");
         UUID playerUUID = event.getPlayer().getUniqueId();
         if (!PlayerInventoryHandler.containsPlayerInventory(playerUUID)) {
             PlayerInventoryHandler.addNewPlayerInventory(playerUUID);

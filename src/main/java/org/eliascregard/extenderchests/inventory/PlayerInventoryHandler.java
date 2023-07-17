@@ -43,9 +43,12 @@ public class PlayerInventoryHandler {
         playerInventories.put(playerUUID, inventory);
     }
 
-    public static void savePlayerInventories(String filePath) {
+    public static void savePlayerInventories(String filePath, boolean backup) {
         PlayerInventoryData data = new PlayerInventoryData(playerInventories);
         data.saveData(filePath);
+        if (backup) {
+            data.saveData(filePath + ".bak");
+        }
     }
 
     public static void loadPlayerInventories(String filePath) {

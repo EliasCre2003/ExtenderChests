@@ -2,3 +2,9 @@ name: ExtenderChests
 version: '${version}'
 main: org.eliascregard.extenderchests.ExtenderChests
 api-version: '1.20'
+
+commands:
+  enderchest:
+    description: Your description
+    usage: /<command>
+    permission: yourplugin.yourcommandpermission

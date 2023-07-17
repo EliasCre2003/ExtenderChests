@@ -1,6 +1,7 @@
 package org.eliascregard.extenderchests.listeners;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -29,56 +30,55 @@ public class EchoShardListener implements Listener {
 
     @EventHandler
     public void onEchoShardRightClick(PlayerInteractEvent event) {
-        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && rightClickBlock) {
+        Action action = event.getAction();
+        if (action == Action.RIGHT_CLICK_BLOCK && rightClickBlock) {
             rightClickBlock = false;
             return;
         }
-        else if (event.getAction() == Action.RIGHT_CLICK_BLOCK && !rightClickBlock) rightClickBlock = true;
-        else if (event.getAction() != Action.RIGHT_CLICK_AIR) return;
-        Bukkit.getLogger().info(event.getAction().toString());
+        else if (action == Action.RIGHT_CLICK_BLOCK) {
+            if (event.getClickedBlock().getType().isInteractable()) return;
+            rightClickBlock = true;
+        }
+        else if (action != Action.RIGHT_CLICK_AIR) return;
         Player player = event.getPlayer();
         if (!consumeEchoShard(player)) return;
-        UUID uuid = player.getUniqueId();
-        increaseInventorySize(uuid);
+        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.7f, -16);
+        player.getWorld().playSound(player, Sound.BLOCK_SCULK_CATALYST_BREAK, 1, 0);
+        increaseInventorySize(player);
     }
 
     private boolean consumeEchoShard(Player player) {
         PlayerInventory inventory = player.getInventory();
         ItemStack mainHand = inventory.getItemInMainHand();
         ItemStack offHand = inventory.getItemInOffHand();
-        if (mainHand.getType() == Material.ECHO_SHARD) {
-            Bukkit.getLogger().info("main hand");
-            int amount = mainHand.getAmount() - 1;
-            inventory.setItemInMainHand(new ItemStack(Material.ECHO_SHARD, amount));
-        } else if (offHand.getType() == Material.ECHO_SHARD) {
-            Bukkit.getLogger().info("secondary hand");
-            int amount = offHand.getAmount() - 1;
-            inventory.setItemInOffHand(new ItemStack(Material.ECHO_SHARD, amount));
-        } else {
-            return false;
+        ItemStack useHand;
+        if (mainHand.getType() == Material.ECHO_SHARD) useHand = mainHand;
+        else if (offHand.getType() == Material.ECHO_SHARD) useHand = offHand;
+        else return false;
+        if (player.getGameMode() != GameMode.CREATIVE) {
+            useHand.setAmount(useHand.getAmount() - 1);
         }
-//        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1, 1);
-//        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_BREAK, 0.7f, 1);
-        player.getWorld().playSound(player, Sound.BLOCK_NOTE_BLOCK_DIDGERIDOO, 1, 1);
         return true;
     }
 
-    private void increaseInventorySize(UUID playerUUID) {
+    private void increaseInventorySize(Player player) {
+        UUID playerUUID = player.getUniqueId();
         Inventory endChestInventory = PlayerInventoryHandler.getPlayerInventory(playerUUID);
         ItemStack[] contents = endChestInventory.getContents();
         if (contents.length >= 54) return;
         ItemStack[] newContents = new ItemStack[contents.length + 9];
         System.arraycopy(contents, 0, newContents, 0, contents.length);
         endChestInventory = Bukkit.createInventory(PlayerInventoryHandler.NEW_ENDER_CHEST, newContents.length,
-                "New Ender Chest");
+                "Ender Chest");
         endChestInventory.setContents(newContents);
         PlayerInventoryHandler.addPlayerInventory(playerUUID, endChestInventory);
-        Bukkit.getLogger().info("Increased inventory size");
+        int rows = newContents.length / 9;
+        player.sendMessage("§5§lYour Ender Chest now has " + rows + " rows (" + newContents.length + " slots).");
     }
 
     private static class EchoShardUse {
-        public Action mouseButton;
-        public int holdingTime;
+        Action mouseButton;
+        int holdingTime;
 
         public EchoShardUse(Action mouseButton, int holdingTime) {
             this.mouseButton = mouseButton;

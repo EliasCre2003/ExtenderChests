@@ -34,7 +34,8 @@ class PlayerInventoryData implements Serializable {
 
     public static PlayerInventoryData loadData(String filePath) {
         try {
-            BukkitObjectInputStream in = new BukkitObjectInputStream(new GZIPInputStream(new FileInputStream(filePath)));
+            BukkitObjectInputStream in = new BukkitObjectInputStream(
+                    new GZIPInputStream(new FileInputStream(filePath)));
             PlayerInventoryData data = (PlayerInventoryData) in.readObject();
             in.close();
             return data;
@@ -50,7 +51,8 @@ class PlayerInventoryData implements Serializable {
             if (file.exists()) {
                 if (!file.delete()) return false;
             }
-            BukkitObjectOutputStream out = new BukkitObjectOutputStream(new GZIPOutputStream(new FileOutputStream(filePath)));
+            BukkitObjectOutputStream out = new BukkitObjectOutputStream(
+                    new GZIPOutputStream(new FileOutputStream(filePath)));
             out.writeObject(this);
             out.close();
             return true;
